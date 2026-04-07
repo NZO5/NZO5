@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #0d0d0d;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -14,15 +14,15 @@ body {
 }
 
 .game-container {
-    background: white;
+    background: #1a1a1a;
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     text-align: center;
 }
 
 h1 {
-    color: #333;
+    color: #eee;
     margin-bottom: 15px;
     font-size: 2rem;
 }
@@ -32,12 +32,12 @@ h1 {
     justify-content: space-around;
     margin-bottom: 15px;
     font-size: 1.2rem;
-    color: #555;
+    color: #aaa;
 }
 
 #gameCanvas {
-    border: 3px solid #333;
-    background-color: #1a1a2e;
+    border: none;
+    background-color: #0d0d0d;
     display: block;
     margin: 0 auto;
 }
@@ -47,14 +47,14 @@ h1 {
 }
 
 .controls p {
-    color: #666;
+    color: #888;
     margin-bottom: 10px;
     font-size: 0.9rem;
 }
 
 button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #4ecca3 0%, #3da88a 100%);
+    color: #0d0d0d;
     border: none;
     padding: 10px 25px;
     margin: 5px;
@@ -66,7 +66,7 @@ button {
 
 button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 15px rgba(78, 204, 163, 0.4);
 }
 
 button:active {
@@ -78,7 +78,7 @@ button:active {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.95);
     color: white;
     padding: 30px;
     border-radius: 10px;

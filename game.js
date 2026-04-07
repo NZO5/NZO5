@@ -50,22 +50,8 @@ function generateFood() {
 // Draw game elements
 function draw() {
     // Clear canvas
-    ctx.fillStyle = '#1a1a2e';
+    ctx.fillStyle = '#0d0d0d';
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-    // Draw grid lines (subtle)
-    ctx.strokeStyle = '#2a2a3e';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i <= GRID_SIZE; i++) {
-        ctx.beginPath();
-        ctx.moveTo(i * CELL_SIZE, 0);
-        ctx.lineTo(i * CELL_SIZE, CANVAS_SIZE);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(0, i * CELL_SIZE);
-        ctx.lineTo(CANVAS_SIZE, i * CELL_SIZE);
-        ctx.stroke();
-    }
 
     // Draw snake
     snake.forEach((segment, index) => {
@@ -87,7 +73,7 @@ function draw() {
         
         // Add eyes to head
         if (index === 0) {
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = '#0d0d0d';
             const eyeSize = CELL_SIZE / 6;
             const eyeOffset = CELL_SIZE / 3;
             
@@ -147,10 +133,17 @@ function moveSnake() {
             break;
     }
 
-    // Check wall collision
-    if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
-        gameOver();
-        return;
+    // Wrap around walls (snake goes through walls and comes out on the other side)
+    if (head.x < 0) {
+        head.x = GRID_SIZE - 1;
+    } else if (head.x >= GRID_SIZE) {
+        head.x = 0;
+    }
+    
+    if (head.y < 0) {
+        head.y = GRID_SIZE - 1;
+    } else if (head.y >= GRID_SIZE) {
+        head.y = 0;
     }
 
     // Check self collision
