@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Crystal Guardian - Level 1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 70%, #228B22 100%);
+            border: 4px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        .stat {
+            margin-bottom: 5px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        #story-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.6;
+            z-index: 10;
+            display: none;
+            border: 2px solid #FFD700;
+        }
+
+        #story-title {
+            color: #FFD700;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        #start-screen, #game-over-screen, #victory-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 20;
+            text-align: center;
+        }
+
+        #game-over-screen, #victory-screen {
+            display: none;
+        }
+
+        h1 {
+            color: #FFD700;
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+        }
+
+        h2 {
+            color: #FF6B6B;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .victory-title {
+            color: #4ECDC4 !important;
+        }
+
+        p {
+            font-size: 16px;
+            margin-bottom: 30px;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        button {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #1a1a2e;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .health-bar {
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border: 2px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ff6b6b);
+            transition: width 0.3s ease;
+        }
+
+        .enemy-health {
+            position: absolute;
+            width: 60px;
+            height: 8px;
+            background: #333;
+            border: 1px solid #fff;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .enemy-health-fill {
+            height: 100%;
+            background: #ff4444;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="800" height="600"></canvas>
+        
+        <div id="ui-overlay">
+            <div class="stat">HERO: <span id="hero-name">Crystal Guardian</span></div>
+            <div class="health-bar">
+                <div class="health-fill" id="player-health" style="width: 100%"></div>
+            </div>
+            <div class="stat" style="margin-top: 10px;">SCORE: <span id="score">0</span></div>
+        </div>
+
+        <div id="story-panel">
+            <div id="story-title">Story</div>
+            <div id="story-text"></div>
+        </div>
+
+        <div id="start-screen">
+            <h1>🏰 THE CRYSTAL GUARDIAN 🏰</h1>
+            <p>
+                In the mystical realm of Pixelia, an ancient evil has awakened. 
+                The dark sorcerer Malakor and his shadow beast have stolen the Sacred Crystal 
+                that protects the kingdom. You are the last Crystal Guardian, chosen by the 
+                elders to retrieve the crystal and restore peace to the land.
+            </p>
+            <p><strong>Level 1: The Enchanted Forest</strong></p>
+            <button onclick="startGame()">BEGIN QUEST</button>
+            <div class="controls">
+                Controls: Arrow Keys or WASD to move | SPACE to attack
+            </div>
+        </div>
+
+        <div id="game-over-screen">
+            <h2>💀 DEFEAT 💀</h2>
+            <p>The darkness has consumed you... The kingdom falls into eternal shadow.</p>
+            <p>Final Score: <span id="final-score-loss">0</span></p>
+            <button onclick="restartGame()">TRY AGAIN</button>
+        </div>
+
+        <div id="victory-screen">
+            <h1 class="victory-title">✨ VICTORY! ✨</h1>
+            <p>
+                Congratulations! You have defeated Malakor's minions and recovered 
+                the first fragment of the Sacred Crystal! The forest is safe once more, 
+                but this is only the beginning. Greater challenges await...
+            </p>
+            <p>Final Score: <span id="final-score-win">0</span></p>
+            <button onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        // Game constants
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const GAME_WIDTH = 800;
+        const GAME_HEIGHT = 600;
+
+        // Game state
+        let gameRunning = false;
+        let score = 0;
+        let keys = {};
+
+        // Story segments
+        const storySegments = [
+            {
+                trigger: 'start',
+                title: 'The Quest Begins',
+                text: 'You enter the Enchanted Forest. The air is thick with magic. Somewhere ahead, Malakor\'s minions guard the Crystal fragment. Stay vigilant!'
+            },
+            {
+                trigger: 'enemy1_near',
+                title: 'Shadow Beast Approaches',
+                text: 'A Shadow Beast emerges from the darkness! These creatures feed on fear and guard Malakor\'s treasures. Defeat it to proceed!'
+            },
+            {
+                trigger: 'enemy2_near',
+                title: 'Dark Sorcerer\'s Apprentice',
+                text: 'Malakor\'s apprentice appears! This dark mage wields powerful spells. Use your agility and courage to overcome this final challenge!'
+            },
+            {
+                trigger: 'victory',
+                title: 'Crystal Recovered',
+                text: 'With both enemies defeated, the path to the Sacred Crystal is clear. You have proven yourself worthy, Guardian!'
+            }
+        ];
+
+        let shownStories = [];
+
+        // Player object
+        const player = {
+            x: 100,
+            y: 450,
+            width: 40,
+            height: 60,
+            speed: 5,
+            health: 100,
+            maxHealth: 100,
+            attacking: false,
+            attackCooldown: 0,
+            direction: 'right',
+            frame: 0,
+            frameTimer: 0
+        };
+
+        // Enemies
+        const enemies = [
+            {
+                id: 1,
+                name: 'Shadow Beast',
+                x: 500,
+                y: 450,
+                width: 50,
+                height: 50,
+                health: 60,
+                maxHealth: 60,
+                speed: 2,
+                damage: 15,
+                type: 'melee',
+                alive: true,
+                patrolStart: 400,
+                patrolEnd: 700,
+                direction: 1,
+                frame: 0,
+                frameTimer: 0
+            },
+            {
+                id: 2,
+                name: 'Dark Mage',
+                x: 650,
+                y: 200,
+                width: 45,
+                height: 65,
+                health: 80,
+                maxHealth: 80,
+                speed: 1.5,
+                damage: 20,
+                type: 'ranged',
+                alive: true,
+                projectiles: [],
+                shootCooldown: 0,
+                frame: 0,
+                frameTimer: 0
+            }
+        ];
+
+        // Projectiles
+        let projectiles = [];
+
+        // Particles
+        let particles = [];
+
+        // Draw pixel art character
+        function drawPlayer(x, y, direction, frame) {
+            ctx.save();
+            
+            if (direction === 'left') {
+                ctx.translate(x + player.width, y);
+                ctx.scale(-1, 1);
+                x = 0;
+                y = 0;
+            }
+
+            // Body (blue tunic)
+            ctx.fillStyle = '#4169E1';
+            ctx.fillRect(x + 10, y + 20, 20, 25);
+            
+            // Head (skin tone)
+            ctx.fillStyle = '#FFDBAC';
+            ctx.fillRect(x + 12, y + 5, 16, 15);
+            
+            // Hair (brown)
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(x + 10, y + 2, 20, 8);
+            
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x + 18, y + 10, 3, 3);
+            
+            // Legs
+            ctx.fillStyle = '#2F4F4F';
+            if (frame % 2 === 0) {
+                ctx.fillRect(x + 12, y + 45, 7, 15);
+                ctx.fillRect(x + 21, y + 45, 7, 15);
+            } else {
+                ctx.fillRect(x + 10, y + 45, 7, 15);
+                ctx.fillRect(x + 23, y + 45, 7, 15);
+            }
+            
+            // Arms
+            ctx.fillStyle = '#FFDBAC';
+            if (player.attacking) {
+                // Sword attack pose
+                ctx.fillRect(x + 25, y + 22, 20, 6);
+                // Sword
+                ctx.fillStyle = '#C0C0C0';
+                ctx.fillRect(x + 45, y + 20, 15, 4);
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(x + 42, y + 18, 4, 8);
+            } else {
+                ctx.fillRect(x + 5, y + 22, 6, 18);
+                ctx.fillRect(x + 29, y + 22, 6, 18);
+            }
+            
+            // Cape
+            ctx.fillStyle = '#DC143C';
+            ctx.beginPath();
+            ctx.moveTo(x + 10, y + 25);
+            ctx.lineTo(x - 5, y + 40 + Math.sin(frame * 0.5) * 3);
+            ctx.lineTo(x + 10, y + 45);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // Draw Shadow Beast
+        function drawEnemy1(enemy) {
+            if (!enemy.alive) return;
+            
+            const x = enemy.x;
+            const y = enemy.y;
+            const frame = enemy.frame;
+
+            // Body (dark purple/black)
+            ctx.fillStyle = '#2C1B3E';
+            ctx.fillRect(x + 10, y + 15, 30, 25);
+            
+            // Head
+            ctx.fillStyle = '#1A0F2E';
+            ctx.fillRect(x + 15, y + 5, 20, 15);
+            
+            // Glowing eyes
+            ctx.fillStyle = '#FF4500';
+            ctx.fillRect(x + 18, y + 10, 4, 4);
+            ctx.fillRect(x + 28, y + 10, 4, 4);
+            
+            // Ears
+            ctx.fillStyle = '#2C1B3E';
+            ctx.beginPath();
+            ctx.moveTo(x + 15, y + 5);
+            ctx.lineTo(x + 12, y - 5);
+            ctx.lineTo(x + 20, y + 5);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x + 25, y + 5);
+            ctx.lineTo(x + 28, y - 5);
+            ctx.lineTo(x + 35, y + 5);
+            ctx.fill();
+            
+            // Legs (animated)
+            ctx.fillStyle = '#1A0F2E';
+            if (frame % 2 === 0) {
+                ctx.fillRect(x + 12, y + 40, 8, 10);
+                ctx.fillRect(x + 30, y + 40, 8, 10);
+            } else {
+                ctx.fillRect(x + 10, y + 40, 8, 10);
+                ctx.fillRect(x + 32, y + 40, 8, 10);
+            }
+            
+            // Tail
+            ctx.fillStyle = '#2C1B3E';
+            ctx.beginPath();
+            ctx.moveTo(x + 40, y + 25);
+            ctx.lineTo(x + 55, y + 20 + Math.sin(frame * 0.3) * 5);
+            ctx.lineTo(x + 40, y + 30);
+            ctx.fill();
+            
+            // Claws
+            ctx.fillStyle = '#8B0000';
+            ctx.fillRect(x + 10, y + 48, 4, 4);
+            ctx.fillRect(x + 36, y + 48, 4, 4);
+        }
+
+        // Draw Dark Mage
+        function drawEnemy2(enemy) {
+            if (!enemy.alive) return;
+            
+            const x = enemy.x;
+            const y = enemy.y;
+            const frame = enemy.frame;
+
+            // Robes (dark purple)
+            ctx.fillStyle = '#4B0082';
+            ctx.fillRect(x + 10, y + 20, 25, 35);
+            
+            // Hood
+            ctx.fillStyle = '#2F004F';
+            ctx.fillRect(x + 8, y + 5, 29, 20);
+            
+            // Face (pale)
+            ctx.fillStyle = '#E8D4C0';
+            ctx.fillRect(x + 15, y + 12, 15, 12);
+            
+            // Glowing eyes
+            ctx.fillStyle = '#00FF00';
+            ctx.fillRect(x + 18, y + 16, 3, 3);
+            ctx.fillRect(x + 24, y + 16, 3, 3);
+            
+            // Staff
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(x + 38, y + 15, 4, 40);
+            
+            // Staff gem
+            ctx.fillStyle = '#FF1493';
+            ctx.beginPath();
+            ctx.arc(x + 40, y + 12, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Hands holding staff
+            ctx.fillStyle = '#E8D4C0';
+            ctx.fillRect(x + 35, y + 30, 8, 6);
+            
+            // Feet
+            ctx.fillStyle = '#2F004F';
+            ctx.fillRect(x + 12, y + 55, 8, 8);
+            ctx.fillRect(x + 25, y + 55, 8, 8);
+            
+            // Magic aura
+            ctx.strokeStyle = 'rgba(138, 43, 226, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x + 22, y + 35, 30 + Math.sin(frame * 0.2) * 3, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Create particle effect
+        function createParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 1,
+                    color: color
+                });
+            }
+        }
+
+        // Update and draw particles
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.03;
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // Show story panel
+        function showStory(segment) {
+            if (shownStories.includes(segment.trigger)) return;
+            
+            shownStories.push(segment.trigger);
+            const panel = document.getElementById('story-panel');
+            document.getElementById('story-title').textContent = segment.title;
+            document.getElementById('story-text').textContent = segment.text;
+            panel.style.display = 'block';
+            
+            setTimeout(() => {
+                panel.style.display = 'none';
+            }, 5000);
+        }
+
+        // Check collision
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        // Update player
+        function updatePlayer() {
+            // Movement
+            if (keys['ArrowLeft'] || keys['KeyA']) {
+                player.x -= player.speed;
+                player.direction = 'left';
+            }
+            if (keys['ArrowRight'] || keys['KeyD']) {
+                player.x += player.speed;
+                player.direction = 'right';
+            }
+            if (keys['ArrowUp'] || keys['KeyW']) {
+                player.y -= player.speed;
+            }
+            if (keys['ArrowDown'] || keys['KeyS']) {
+                player.y += player.speed;
+            }
+
+            // Boundary checks
+            player.x = Math.max(0, Math.min(GAME_WIDTH - player.width, player.x));
+            player.y = Math.max(0, Math.min(GAME_HEIGHT - player.height, player.y));
+
+            // Attack
+            if (keys['Space'] && player.attackCooldown <= 0) {
+                player.attacking = true;
+                player.attackCooldown = 20;
+                
+                // Check enemy hits
+                const attackRange = {
+                    x: player.direction === 'right' ? player.x + player.width : player.x - 30,
+                    y: player.y,
+                    width: 30,
+                    height: player.height
+                };
+
+                enemies.forEach(enemy => {
+                    if (enemy.alive && checkCollision(attackRange, enemy)) {
+                        enemy.health -= 20;
+                        createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#FF4500', 10);
+                        
+                        if (enemy.health <= 0) {
+                            enemy.alive = false;
+                            score += 100;
+                            createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#FFD700', 20);
+                        }
+                    }
+                });
+
+                setTimeout(() => player.attacking = false, 200);
+            }
+
+            if (player.attackCooldown > 0) player.attackCooldown--;
+
+            // Animation
+            player.frameTimer++;
+            if (player.frameTimer > 10) {
+                player.frame++;
+                player.frameTimer = 0;
+            }
+        }
+
+        // Update enemies
+        function updateEnemies() {
+            enemies.forEach(enemy => {
+                if (!enemy.alive) return;
+
+                // Animation
+                enemy.frameTimer++;
+                if (enemy.frameTimer > 15) {
+                    enemy.frame++;
+                    enemy.frameTimer = 0;
+                }
+
+                if (enemy.id === 1) {
+                    // Shadow Beast - patrols and chases
+                    const distToPlayer = Math.sqrt(Math.pow(player.x - enemy.x, 2) + Math.pow(player.y - enemy.y, 2));
+                    
+                    if (distToPlayer < 200) {
+                        // Chase player
+                        const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+                        enemy.x += Math.cos(angle) * enemy.speed;
+                        enemy.y += Math.sin(angle) * enemy.speed;
+                    } else {
+                        // Patrol
+                        enemy.x += enemy.speed * enemy.direction;
+                        if (enemy.x > enemy.patrolEnd || enemy.x < enemy.patrolStart) {
+                            enemy.direction *= -1;
+                        }
+                    }
+
+                    // Collision with player
+                    if (checkCollision(player, enemy)) {
+                        player.health -= enemy.damage / 30;
+                        createParticles(player.x + player.width/2, player.y + player.height/2, '#FF0000', 5);
+                    }
+
+                    // Show story when near
+                    if (distToPlayer < 250) {
+                        showStory(storySegments[1]);
+                    }
+
+                } else if (enemy.id === 2) {
+                    // Dark Mage - keeps distance and shoots
+                    const distToPlayer = Math.sqrt(Math.pow(player.x - enemy.x, 2) + Math.pow(player.y - enemy.y, 2));
+                    
+                    // Keep distance
+                    if (distToPlayer < 150) {
+                        const angle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+                        enemy.x += Math.cos(angle) * enemy.speed;
+                        enemy.y += Math.sin(angle) * enemy.speed;
+                    } else if (distToPlayer > 300) {
+                        const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+                        enemy.x += Math.cos(angle) * enemy.speed;
+                        enemy.y += Math.sin(angle) * enemy.speed;
+                    }
+
+                    // Shoot projectiles
+                    if (enemy.shootCooldown <= 0) {
+                        const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+                        projectiles.push({
+                            x: enemy.x + enemy.width/2,
+                            y: enemy.y + enemy.height/2,
+                            vx: Math.cos(angle) * 5,
+                            vy: Math.sin(angle) * 5,
+                            damage: 15,
+                            isEnemy: true
+                        });
+                        enemy.shootCooldown = 120;
+                    }
+                    enemy.shootCooldown--;
+
+                    // Show story when near
+                    if (distToPlayer < 350 && enemies[0].alive === false) {
+                        showStory(storySegments[2]);
+                    }
+                }
+
+                // Boundary checks
+                enemy.x = Math.max(0, Math.min(GAME_WIDTH - enemy.width, enemy.x));
+                enemy.y = Math.max(0, Math.min(GAME_HEIGHT - enemy.height, enemy.y));
+            });
+        }
+
+        // Update projectiles
+        function updateProjectiles() {
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const proj = projectiles[i];
+                proj.x += proj.vx;
+                proj.y += proj.vy;
+
+                // Remove if out of bounds
+                if (proj.x < 0 || proj.x > GAME_WIDTH || proj.y < 0 || proj.y > GAME_HEIGHT) {
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+
+                // Check collision with player
+                if (proj.isEnemy && checkCollision(proj, player)) {
+                    player.health -= proj.damage;
+                    createParticles(player.x + player.width/2, player.y + player.height/2, '#FF0000', 8);
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+            }
+        }
+
+        // Draw everything
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            // Draw background elements
+            // Grass
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, 500, GAME_WIDTH, 100);
+            
+            // Trees
+            for (let i = 0; i < 5; i++) {
+                const treeX = 100 + i * 150;
+                // Trunk
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(treeX, 400, 30, 100);
+                // Leaves
+                ctx.fillStyle = '#006400';
+                ctx.beginPath();
+                ctx.moveTo(treeX - 20, 400);
+                ctx.lineTo(treeX + 15, 320);
+                ctx.lineTo(treeX + 50, 400);
+                ctx.fill();
+            }
+
+            // Draw ground decoration
+            ctx.fillStyle = '#90EE90';
+            for (let i = 0; i < 20; i++) {
+                const grassX = (i * 47) % GAME_WIDTH;
+                const grassY = 480 + (i % 3) * 10;
+                ctx.fillRect(grassX, grassY, 3, 15);
+            }
+
+            // Draw player
+            drawPlayer(player.x, player.y, player.direction, player.frame);
+
+            // Draw enemies
+            drawEnemy1(enemies[0]);
+            drawEnemy2(enemies[1]);
+
+            // Draw projectiles
+            projectiles.forEach(proj => {
+                ctx.fillStyle = '#FF1493';
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Glow effect
+                ctx.fillStyle = 'rgba(255, 20, 147, 0.5)';
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, 12, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw particles
+            updateParticles();
+
+            // Draw enemy health bars
+            enemies.forEach(enemy => {
+                if (enemy.alive) {
+                    const healthPercent = (enemy.health / enemy.maxHealth) * 100;
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(enemy.x, enemy.y - 15, enemy.width, 8);
+                    ctx.fillStyle = '#ff4444';
+                    ctx.fillRect(enemy.x, enemy.y - 15, enemy.width * (healthPercent / 100), 8);
+                }
+            });
+
+            // Update UI
+            document.getElementById('player-health').style.width = Math.max(0, player.health) + '%';
+            document.getElementById('score').textContent = score;
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            updatePlayer();
+            updateEnemies();
+            updateProjectiles();
+            draw();
+
+            // Check game over
+            if (player.health <= 0) {
+                gameOver();
+                return;
+            }
+
+            // Check victory
+            if (!enemies[0].alive && !enemies[1].alive) {
+                victory();
+                return;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            gameRunning = true;
+            score = 0;
+            player.health = 100;
+            player.x = 100;
+            player.y = 450;
+            
+            enemies[0].health = 60;
+            enemies[0].alive = true;
+            enemies[0].x = 500;
+            enemies[0].y = 450;
+            
+            enemies[1].health = 80;
+            enemies[1].alive = true;
+            enemies[1].x = 650;
+            enemies[1].y = 200;
+            
+            projectiles = [];
+            particles = [];
+            shownStories = [];
+
+            // Show initial story
+            showStory(storySegments[0]);
+
+            gameLoop();
+        }
+
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('final-score-loss').textContent = score;
+            document.getElementById('game-over-screen').style.display = 'flex';
+        }
+
+        // Victory
+        function victory() {
+            gameRunning = false;
+            score += 500; // Bonus for completing level
+            document.getElementById('final-score-win').textContent = score;
+            showStory(storySegments[3]);
+            setTimeout(() => {
+                document.getElementById('victory-screen').style.display = 'flex';
+            }, 1000);
+        }
+
+        // Restart game
+        function restartGame() {
+            document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('victory-screen').style.display = 'none';
+            startGame();
+        }
+
+        // Event listeners
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (e.code === 'Space') e.preventDefault();
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // Initial draw
+        ctx.fillStyle = '#87CEEB';
+        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    </script>
+</body>
+</html>
